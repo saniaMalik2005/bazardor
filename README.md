@@ -1,36 +1,16 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛒 বাজার দর (BazarDor)
 
-## Getting Started
+A modern dynamic web application for tracking daily grocery prices, market trends (price hikes/drops), and comparative market analysis in Bangladesh.
 
-First, run the development server:
+## 🚀 Technologies Used
+- **Next.js (App Router)** - For high-performance UI and server/client routing
+- **Tailwind CSS** - For styling, responsiveness, and clean UI components
+- **TypeScript** - For type safety and robust code structure
+- **BetterAuth** - For secure user authentication (Email/Password & Social Login)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ✨ Key Features
+1. **Interactive Navbar & Price Ticker:** Features a custom logo, Bangla date, dynamic category navigation, auth state indicators, and an infinite-scrolling live price ticker.
+2. **Dynamic Product Sections:** Highlights today’s top risers (“আজ দাম বেড়েছে”) and top fallers (“আজ দাম কমেছে”) alongside a responsive product grid (“সব পণ্য”).
+3. **Product Details & Market Breakdown:** Provides detailed insights for each product, including minimum, maximum, and average prices, as well as breakdown data across various markets.
+4. **Category & Sorting System:** Advanced filtering by category and accurate sorting based on Bengali numerals (price low-to-high and high-to-low).
+5. **Secure Authentication & Profile Management:** Implements BetterAuth for seamless sign-in, sign-up, social login, and user profile updates.
