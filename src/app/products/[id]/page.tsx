@@ -2,7 +2,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
+
+type Market = {
+  name?: string;
+  nameBn?: string;
+  price?: number;
+  today?: number;
+};
 
 type Product = {
   id: number;
@@ -12,6 +20,7 @@ type Product = {
   categoryNameBn: string;
   categoryIcon: string;
   unit: string;
+  image?: string;
   today: number;
   yesterday: number;
   lastWeek: number;
@@ -20,12 +29,7 @@ type Product = {
     dir: "up" | "down" | "flat";
     pct: number;
   };
-  markets?: {
-    name?: string;
-    nameBn?: string;
-    price?: number;
-    today?: number;
-  }[];
+  markets?: Market[];
 };
 
 function bn(value: number) {
@@ -33,7 +37,7 @@ function bn(value: number) {
 }
 
 export default function ProductDetails() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const id = params.id;
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -41,10 +45,15 @@ export default function ProductDetails() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadProduct() {
+      setLoading(true);
+      setError("");
+
       try {
         const response = await fetch(
-          `https://api.api-store.workers.dev/api/bazardor/products/${id}`
+          `https://openapi.programming-hero.com/api/bazardor/products/${id}`
         );
 
         if (!response.ok) {
@@ -52,125 +61,186 @@ export default function ProductDetails() {
         }
 
         const data = await response.json();
-        setProduct(data.product ?? data);
+        const item = data.product ?? data;
+
+        if (!cancelled) {
+          if (item && item.id !== undefined) {
+            setProduct(item);
+          } else {
+            setError("পণ্যের তথ্য পাওয়া যায়নি।");
+          }
+        }
       } catch {
-        setError("পণ্যের তথ্য পাওয়া যায়নি।");
+        if (!cancelled) {
+          setError("পণ্যের তথ্য লোড করা যায়নি। আবার চেষ্টা করো।");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    loadProduct();
+    if (id) {
+      loadProduct();
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#fffaf0] p-8">
-        <p className="text-center text-lg">পণ্যের তথ্য লোড হচ্ছে...</p>
+      <main className="min-h-screen bg-[#fffaf0] px-5 py-12">
+        <div className="mx-auto max-w-3xl animate-pulse rounded-3xl bg-white p-8 shadow-sm">
+          <div className="h-16 w-16 rounded-2xl bg-gray-200" />
+          <div className="mt-6 h-5 w-1/3 rounded bg-gray-200" />
+          <div className="mt-4 h-8 w-2/3 rounded bg-gray-200" />
+          <div className="mt-5 h-10 w-1/2 rounded bg-gray-200" />
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="h-24 rounded-xl bg-gray-100" />
+            ))}
+          </div>
+        </div>
       </main>
     );
   }
 
   if (error || !product) {
     return (
-      <main className="min-h-screen bg-[#fffaf0] p-8 text-center">
-        <h1 className="text-2xl font-bold">পণ্য পাওয়া যায়নি</h1>
-        <a href="/" className="mt-4 inline-block text-green-700 underline">
-          হোম পেজে ফিরে যান
-        </a>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-[#fffaf0] px-5 text-center">
+        <p className="text-5xl">🔎</p>
+        <h1 className="mt-4 text-2xl font-extrabold">
+          পণ্য পাওয়া যায়নি
+        </h1>
+        <p className="mt-2 text-gray-600">
+          {error || "এই পণ্যের তথ্য বর্তমানে পাওয়া যাচ্ছে না।"}
+        </p>
+        <Link
+          href="/"
+          className="mt-6 rounded-xl bg-green-700 px-5 py-3 font-bold text-white hover:bg-green-800"
+        >
+          ← হোম পেজে ফিরে যান
+        </Link>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#fffaf0] px-5 py-10 text-gray-800">
-      <div className="mx-auto max-w-3xl">
-        <a href="/" className="font-semibold text-green-700">
-          ← হোম পেজে ফিরে যান
-        </a>
+    <main className="min-h-screen bg-[#fffaf0] px-5 py-8 text-gray-800 sm:py-12">
+      <div className="mx-auto max-w-4xl">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <Link href="/" className="text-xl font-extrabold text-green-700">
+            🛒 বাজার দর
+          </Link>
 
-        <article className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-10">
-          <span className="text-6xl">{product.categoryIcon}</span>
-
-          <p className="mt-5 text-sm text-gray-500">
-            {product.categoryNameBn}
-          </p>
-
-          <h1 className="mt-2 text-3xl font-extrabold">
-            {product.nameBn}
-          </h1>
-
-          <p className="mt-6 text-4xl font-extrabold text-green-800">
-            ৳{bn(product.today)}
-            <span className="ml-2 text-base font-medium text-gray-500">
-              / {product.unit}
-            </span>
-          </p>
-
-          <p
-            className={`mt-4 font-bold ${
-              product.change.dir === "up"
-                ? "text-red-600"
-                : product.change.dir === "down"
-                  ? "text-green-700"
-                  : "text-gray-500"
-            }`}
+          <Link
+            href="/"
+            className="rounded-xl border border-green-200 bg-white px-4 py-2 font-semibold text-green-800 transition hover:bg-green-50"
           >
-            {product.change.dir === "up"
-              ? "▲ দাম বেড়েছে"
-              : product.change.dir === "down"
-                ? "▼ দাম কমেছে"
-                : "● দাম অপরিবর্তিত"}{" "}
-            ({bn(product.change.pct)}%)
-          </p>
+            ← সব পণ্য
+          </Link>
+        </header>
 
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">গতকাল</p>
-              <p className="mt-2 text-xl font-bold">
-                ৳{bn(product.yesterday)}
-              </p>
-            </div>
+        <article className="mt-7 overflow-hidden rounded-3xl border border-green-100 bg-white shadow-sm">
+          <div className="bg-gradient-to-r from-green-900 to-green-700 p-6 text-white sm:p-10">
+            <span className="text-6xl">{product.categoryIcon || "🛍️"}</span>
 
-            <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">গত সপ্তাহ</p>
-              <p className="mt-2 text-xl font-bold">
-                ৳{bn(product.lastWeek)}
-              </p>
-            </div>
+            <p className="mt-5 text-sm font-medium text-green-100">
+              {product.categoryNameBn}
+            </p>
 
-            <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">গত মাস</p>
-              <p className="mt-2 text-xl font-bold">
-                ৳{bn(product.lastMonth)}
-              </p>
-            </div>
+            <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">
+              {product.nameBn}
+            </h1>
+
+            <p className="mt-6 text-4xl font-extrabold sm:text-5xl">
+              ৳{bn(product.today)}
+              <span className="ml-2 text-base font-medium text-green-100">
+                / {product.unit}
+              </span>
+            </p>
+
+            <p className="mt-4 font-bold">
+              {product.change.dir === "up"
+                ? "▲ দাম বেড়েছে"
+                : product.change.dir === "down"
+                  ? "▼ দাম কমেছে"
+                  : "● দাম অপরিবর্তিত"}
+              {" "}({product.change.pct > 0 ? "+" : ""}
+              {bn(product.change.pct)}%)
+            </p>
           </div>
 
-          <h2 className="mt-8 text-xl font-bold">বাজারের তথ্য</h2>
-
-          {product.markets && product.markets.length > 0 ? (
-            <div className="mt-4 space-y-3">
-              {product.markets.map((market, index) => (
-                <div
-                  key={`${market.nameBn ?? market.name ?? "market"}-${index}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border p-4"
-                >
-                  <span className="font-medium">
-                    {market.nameBn ?? market.name ?? "বাজার"}
-                  </span>
-
-                  <span className="font-bold text-green-800">
-                    ৳{bn(market.price ?? market.today ?? 0)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-3 text-gray-500">
-              এই পণ্যের জন্য আলাদা বাজারভিত্তিক তথ্য পাওয়া যায়নি।
+          <div className="p-6 sm:p-10">
+            <h2 className="text-xl font-extrabold">দামের ইতিহাস</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              আগের সময়ের সঙ্গে আজকের দাম তুলনা করুন।
             </p>
-          )}
+
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl bg-gray-50 p-5">
+                <p className="text-sm text-gray-500">গতকাল</p>
+                <p className="mt-2 text-2xl font-extrabold">
+                  ৳{bn(product.yesterday)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-gray-50 p-5">
+                <p className="text-sm text-gray-500">গত সপ্তাহ</p>
+                <p className="mt-2 text-2xl font-extrabold">
+                  ৳{bn(product.lastWeek)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-gray-50 p-5">
+                <p className="text-sm text-gray-500">গত মাস</p>
+                <p className="mt-2 text-2xl font-extrabold">
+                  ৳{bn(product.lastMonth)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-9">
+              <h2 className="text-xl font-extrabold">বাজারভিত্তিক দাম</h2>
+
+              {product.markets && product.markets.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  {product.markets.map((market, index) => (
+                    <div
+                      key={`${market.nameBn ?? market.name ?? "market"}-${index}`}
+                      className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 p-4"
+                    >
+                      <span className="font-medium">
+                        {market.nameBn ?? market.name ?? "বাজার"}
+                      </span>
+
+                      <span className="font-extrabold text-green-800">
+                        ৳{bn(market.price ?? market.today ?? 0)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
+                  এই পণ্যের আলাদা বাজারভিত্তিক দাম পাওয়া যায়নি।
+                </p>
+              )}
+            </div>
+
+            <p className="mt-8 rounded-xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+              মনে রাখবেন: বাজার ও স্থানভেদে প্রকৃত দাম কিছুটা আলাদা হতে পারে।
+            </p>
+
+            <Link
+              href="/"
+              className="mt-6 inline-block rounded-xl bg-green-700 px-6 py-3 font-bold text-white transition hover:bg-green-800"
+            >
+              ← অন্য পণ্যের দাম দেখুন
+            </Link>
+          </div>
         </article>
       </div>
     </main>

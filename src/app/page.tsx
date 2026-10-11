@@ -38,7 +38,7 @@ export default function Home() {
     async function fetchProducts() {
       try {
         const response = await fetch(
-          "https://api.api-store.workers.dev/api/bazardor/products"
+          "https://openapi.programming-hero.com/api/bazardor/products"
         );
 
         if (!response.ok) {
